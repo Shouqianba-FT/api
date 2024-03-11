@@ -609,6 +609,28 @@ Currently this is only supported for ROUND_ROBIN and LEAST_REQUEST load balancer
 No
 </td>
 </tr>
+<tr id="LoadBalancerSettings-aggression">
+<td><code>aggression</code></td>
+<td><code>string</code></td>
+<td>
+<p>The aggression factor for traffic increase during slow start.</p>
+
+</td>
+<td>
+No
+</td>
+</tr>
+<tr id="LoadBalancerSettings-min_weight_percent">
+<td><code>minWeightPercent</code></td>
+<td><code>uint32</code></td>
+<td>
+<p>The minimum percentage of traffic to send to new endpoints during slow start.</p>
+
+</td>
+<td>
+No
+</td>
+</tr>
 </tbody>
 </table>
 </section>
