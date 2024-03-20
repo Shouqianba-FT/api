@@ -656,10 +656,10 @@ message LoadBalancerSettings {
   google.protobuf.Duration warmup_duration_secs = 4;
 
   // The aggression factor for traffic increase during slow start.
-  string aggression = 99;
+  string sqb_aggression = 99;
 
   // The minimum percentage of traffic to send to new endpoints during slow start.
-  uint32 min_weight_percent = 100;
+  uint32 sqb_min_weight_percent = 100;
 }
 
 // Connection pool settings for an upstream host. The settings apply to
