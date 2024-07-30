@@ -36828,6 +36828,16 @@
                 "id": 4,
                 "name": "warmup_duration_secs",
                 "type": "google.protobuf.Duration"
+              },
+              {
+                "id": 99,
+                "name": "sqb_aggression",
+                "type": "string"
+              },
+              {
+                "id": 100,
+                "name": "sqb_min_weight_percent",
+                "type": "uint32"
               }
             ],
             "messages": [
@@ -39791,6 +39801,16 @@
                 "id": 4,
                 "name": "warmup_duration_secs",
                 "type": "google.protobuf.Duration"
+              },
+              {
+                "id": 99,
+                "name": "sqb_aggression",
+                "type": "string"
+              },
+              {
+                "id": 100,
+                "name": "sqb_min_weight_percent",
+                "type": "uint32"
               }
             ],
             "messages": [
