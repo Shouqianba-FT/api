@@ -193,8 +193,11 @@
             "$ref": "#/components/schemas/istio.networking.v1alpha3.LocalityLoadBalancerSetting"
           },
           "warmupDurationSecs": {
-            "description": "Represents the warmup duration of Service. If set, the newly created endpoint of service remains in warmup mode starting from its creation time for the duration of this window and Istio progressively increases amount of traffic for that endpoint instead of sending proportional amount of traffic. This should be enabled for services that require warm up time to serve full production load with reasonable latency. Please note that this is most effective when few new endpoints come up like scale event in Kubernetes. When all the endpoints are relatively new like new deployment, this is not very effective as all endpoints end up getting same amount of requests. Currently this is only supported for ROUND_ROBIN and LEAST_REQUEST load balancers.",
+            "description": "Deprecated: use `warmup` instead.",
             "type": "string"
+          },
+          "warmup": {
+            "$ref": "#/components/schemas/istio.networking.v1alpha3.WarmupConfiguration"
           }
         },
         "oneOf": [
@@ -442,7 +445,7 @@
         }
       },
       "istio.networking.v1alpha3.LoadBalancerSettings.SimpleLB": {
-        "description": "Standard load balancing algorithms that require no tuning.",
+        "description": "+kubebuilder:validation:XValidation:message=\"only one of warmupDurationSecs or warmup can be set\",rule=\"(has(self.warmupDurationSecs)?1:0)+(has(self.warmup)?1:0)\u003c=1\" Standard load balancing algorithms that require no tuning.",
         "type": "string",
         "enum": [
           "UNSPECIFIED",
@@ -658,6 +661,25 @@
           "targetPort": {
             "description": "Specifies a port to which the downstream connection is tunneled.",
             "type": "integer"
+          }
+        }
+      },
+      "istio.networking.v1alpha3.WarmupConfiguration": {
+        "type": "object",
+        "properties": {
+          "duration": {
+            "description": "Duration of warmup mode",
+            "type": "string"
+          },
+          "minimumPercent": {
+            "description": "Configures the minimum percentage of origin weight If unspecified, defaults to 10 +kubebuilder:validation:Maximum=100 +kubebuilder:validation:Minimum=0",
+            "type": "number",
+            "nullable": true
+          },
+          "aggression": {
+            "description": "This parameter controls the speed of traffic increase over the warmup duration. Defaults to 1.0, so that endpoints would get linearly increasing amount of traffic. When increasing the value for this parameter, the speed of traffic ramp-up increases non-linearly. +kubebuilder:validation:Minimum=0.01",
+            "type": "number",
+            "nullable": true
           }
         }
       },
