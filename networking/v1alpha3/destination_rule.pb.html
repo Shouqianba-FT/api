@@ -6,7 +6,7 @@ layout: protoc-gen-docs
 generator: protoc-gen-docs
 schema: istio.networking.v1alpha3.DestinationRule
 aliases: [/docs/reference/config/networking/v1alpha3/destination-rule]
-number_of_entries: 23
+number_of_entries: 24
 ---
 <p><code>DestinationRule</code> defines policies that apply to traffic intended for a
 service after routing has occurred. These rules specify configuration
@@ -606,6 +606,69 @@ Please note that this is most effective when few new endpoints come up like scal
 endpoints are relatively new like new deployment, this is not very effective as all endpoints end up getting same
 amount of requests.
 Currently this is only supported for ROUND_ROBIN and LEAST_REQUEST load balancers.</p>
+
+</td>
+<td>
+No
+</td>
+</tr>
+<tr id="LoadBalancerSettings-warmup">
+<td><code>warmup</code></td>
+<td><code><a href="#WarmupConfiguration">WarmupConfiguration</a></code></td>
+<td>
+</td>
+<td>
+No
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<h2 id="WarmupConfiguration">WarmupConfiguration</h2>
+<section>
+<table class="message-fields">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr id="WarmupConfiguration-duration">
+<td><code>duration</code></td>
+<td><code><a href="https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#duration">Duration</a></code></td>
+<td>
+<p>Duration of warmup mode</p>
+
+</td>
+<td>
+Yes
+</td>
+</tr>
+<tr id="WarmupConfiguration-minimum_percent">
+<td><code>minimumPercent</code></td>
+<td><code><a href="https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#doublevalue">DoubleValue</a></code></td>
+<td>
+<p>Configures the minimum percentage of origin weight
+If unspecified, defaults to 10
++kubebuilder:validation:Maximum=100
++kubebuilder:validation:Minimum=0</p>
+
+</td>
+<td>
+No
+</td>
+</tr>
+<tr id="WarmupConfiguration-aggression">
+<td><code>aggression</code></td>
+<td><code><a href="https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#doublevalue">DoubleValue</a></code></td>
+<td>
+<p>This parameter controls the speed of traffic increase over the warmup duration. Defaults to 1.0, so that endpoints would
+get linearly increasing amount of traffic. When increasing the value for this parameter,
+the speed of traffic ramp-up increases non-linearly.
++kubebuilder:validation:Minimum=0.01</p>
 
 </td>
 <td>
@@ -2006,7 +2069,8 @@ No
 </section>
 <h2 id="LoadBalancerSettings-SimpleLB">LoadBalancerSettings.SimpleLB</h2>
 <section>
-<p>Standard load balancing algorithms that require no tuning.</p>
+<p>+kubebuilder:validation:XValidation:message=&ldquo;only one of warmupDurationSecs or warmup can be set&rdquo;,rule=&quot;(has(self.warmupDurationSecs)?1:0)+(has(self.warmup)?1:0)&lt;=1&quot;
+Standard load balancing algorithms that require no tuning.</p>
 
 <table class="enum-values">
 <thead>
