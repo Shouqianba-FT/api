@@ -39569,6 +39569,11 @@
                 "id": 4,
                 "name": "warmup_duration_secs",
                 "type": "google.protobuf.Duration"
+              },
+              {
+                "id": 5,
+                "name": "warmup",
+                "type": "WarmupConfiguration"
               }
             ],
             "messages": [
@@ -39665,6 +39670,32 @@
                     ]
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "name": "WarmupConfiguration",
+            "fields": [
+              {
+                "id": 1,
+                "name": "duration",
+                "type": "google.protobuf.Duration",
+                "options": [
+                  {
+                    "name": "(google.api.field_behavior)",
+                    "value": "REQUIRED"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "name": "minimum_percent",
+                "type": "google.protobuf.DoubleValue"
+              },
+              {
+                "id": 3,
+                "name": "aggression",
+                "type": "google.protobuf.DoubleValue"
               }
             ]
           },
@@ -42535,6 +42566,11 @@
                 "id": 4,
                 "name": "warmup_duration_secs",
                 "type": "google.protobuf.Duration"
+              },
+              {
+                "id": 5,
+                "name": "warmup",
+                "type": "WarmupConfiguration"
               }
             ],
             "messages": [
@@ -42631,6 +42667,32 @@
                     ]
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "name": "WarmupConfiguration",
+            "fields": [
+              {
+                "id": 1,
+                "name": "duration",
+                "type": "google.protobuf.Duration",
+                "options": [
+                  {
+                    "name": "(google.api.field_behavior)",
+                    "value": "REQUIRED"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "name": "minimum_percent",
+                "type": "google.protobuf.DoubleValue"
+              },
+              {
+                "id": 3,
+                "name": "aggression",
+                "type": "google.protobuf.DoubleValue"
               }
             ]
           },

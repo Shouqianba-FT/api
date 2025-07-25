@@ -185,6 +185,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// +kubebuilder:validation:XValidation:message="only one of warmupDurationSecs or warmup can be set",rule="(has(self.warmupDurationSecs)?1:0)+(has(self.warmup)?1:0)<=1"
 // Standard load balancing algorithms that require no tuning.
 type LoadBalancerSettings_SimpleLB int32
 
@@ -317,7 +318,7 @@ func (x ConnectionPoolSettings_HTTPSettings_H2UpgradePolicy) Number() protorefle
 
 // Deprecated: Use ConnectionPoolSettings_HTTPSettings_H2UpgradePolicy.Descriptor instead.
 func (ConnectionPoolSettings_HTTPSettings_H2UpgradePolicy) EnumDescriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{4, 1, 0}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{5, 1, 0}
 }
 
 // TLS connection mode
@@ -379,7 +380,7 @@ func (x ClientTLSSettings_TLSmode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ClientTLSSettings_TLSmode.Descriptor instead.
 func (ClientTLSSettings_TLSmode) EnumDescriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{6, 0}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{7, 0}
 }
 
 // DestinationRule defines policies that apply to traffic intended for a service
@@ -888,7 +889,8 @@ type LoadBalancerSettings struct {
 	// endpoints are relatively new like new deployment, this is not very effective as all endpoints end up getting same
 	// amount of requests.
 	// Currently this is only supported for ROUND_ROBIN and LEAST_REQUEST load balancers.
-	WarmupDurationSecs *duration.Duration `protobuf:"bytes,4,opt,name=warmup_duration_secs,json=warmupDurationSecs,proto3" json:"warmup_duration_secs,omitempty"`
+	WarmupDurationSecs *duration.Duration   `protobuf:"bytes,4,opt,name=warmup_duration_secs,json=warmupDurationSecs,proto3" json:"warmup_duration_secs,omitempty"`
+	Warmup             *WarmupConfiguration `protobuf:"bytes,5,opt,name=warmup,proto3" json:"warmup,omitempty"`
 }
 
 func (x *LoadBalancerSettings) Reset() {
@@ -958,6 +960,13 @@ func (x *LoadBalancerSettings) GetWarmupDurationSecs() *duration.Duration {
 	return nil
 }
 
+func (x *LoadBalancerSettings) GetWarmup() *WarmupConfiguration {
+	if x != nil {
+		return x.Warmup
+	}
+	return nil
+}
+
 type isLoadBalancerSettings_LbPolicy interface {
 	isLoadBalancerSettings_LbPolicy()
 }
@@ -973,6 +982,78 @@ type LoadBalancerSettings_ConsistentHash struct {
 func (*LoadBalancerSettings_Simple) isLoadBalancerSettings_LbPolicy() {}
 
 func (*LoadBalancerSettings_ConsistentHash) isLoadBalancerSettings_LbPolicy() {}
+
+type WarmupConfiguration struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Duration of warmup mode
+	Duration *duration.Duration `protobuf:"bytes,1,opt,name=duration,proto3" json:"duration,omitempty"`
+	// Configures the minimum percentage of origin weight
+	// If unspecified, defaults to 10
+	// +kubebuilder:validation:Maximum=100
+	// +kubebuilder:validation:Minimum=0
+	MinimumPercent *wrappers.DoubleValue `protobuf:"bytes,2,opt,name=minimum_percent,json=minimumPercent,proto3" json:"minimum_percent,omitempty"`
+	// This parameter controls the speed of traffic increase over the warmup duration. Defaults to 1.0, so that endpoints would
+	// get linearly increasing amount of traffic. When increasing the value for this parameter,
+	// the speed of traffic ramp-up increases non-linearly.
+	// +kubebuilder:validation:Minimum=0.01
+	Aggression *wrappers.DoubleValue `protobuf:"bytes,3,opt,name=aggression,proto3" json:"aggression,omitempty"`
+}
+
+func (x *WarmupConfiguration) Reset() {
+	*x = WarmupConfiguration{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WarmupConfiguration) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WarmupConfiguration) ProtoMessage() {}
+
+func (x *WarmupConfiguration) ProtoReflect() protoreflect.Message {
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WarmupConfiguration.ProtoReflect.Descriptor instead.
+func (*WarmupConfiguration) Descriptor() ([]byte, []int) {
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *WarmupConfiguration) GetDuration() *duration.Duration {
+	if x != nil {
+		return x.Duration
+	}
+	return nil
+}
+
+func (x *WarmupConfiguration) GetMinimumPercent() *wrappers.DoubleValue {
+	if x != nil {
+		return x.MinimumPercent
+	}
+	return nil
+}
+
+func (x *WarmupConfiguration) GetAggression() *wrappers.DoubleValue {
+	if x != nil {
+		return x.Aggression
+	}
+	return nil
+}
 
 // Connection pool settings for an upstream host. The settings apply to
 // each individual host in the upstream service.  See Envoy's [circuit
@@ -1044,7 +1125,7 @@ type ConnectionPoolSettings struct {
 func (x *ConnectionPoolSettings) Reset() {
 	*x = ConnectionPoolSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[4]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1057,7 +1138,7 @@ func (x *ConnectionPoolSettings) String() string {
 func (*ConnectionPoolSettings) ProtoMessage() {}
 
 func (x *ConnectionPoolSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[4]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1070,7 +1151,7 @@ func (x *ConnectionPoolSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectionPoolSettings.ProtoReflect.Descriptor instead.
 func (*ConnectionPoolSettings) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{4}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ConnectionPoolSettings) GetTcp() *ConnectionPoolSettings_TCPSettings {
@@ -1235,7 +1316,7 @@ type OutlierDetection struct {
 func (x *OutlierDetection) Reset() {
 	*x = OutlierDetection{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[5]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1248,7 +1329,7 @@ func (x *OutlierDetection) String() string {
 func (*OutlierDetection) ProtoMessage() {}
 
 func (x *OutlierDetection) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[5]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1261,7 +1342,7 @@ func (x *OutlierDetection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutlierDetection.ProtoReflect.Descriptor instead.
 func (*OutlierDetection) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{5}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{6}
 }
 
 // Deprecated: Marked as deprecated in networking/v1beta1/destination_rule.proto.
@@ -1533,7 +1614,7 @@ type ClientTLSSettings struct {
 func (x *ClientTLSSettings) Reset() {
 	*x = ClientTLSSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[6]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1546,7 +1627,7 @@ func (x *ClientTLSSettings) String() string {
 func (*ClientTLSSettings) ProtoMessage() {}
 
 func (x *ClientTLSSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[6]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1559,7 +1640,7 @@ func (x *ClientTLSSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientTLSSettings.ProtoReflect.Descriptor instead.
 func (*ClientTLSSettings) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{6}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ClientTLSSettings) GetMode() ClientTLSSettings_TLSmode {
@@ -1753,7 +1834,7 @@ type LocalityLoadBalancerSetting struct {
 func (x *LocalityLoadBalancerSetting) Reset() {
 	*x = LocalityLoadBalancerSetting{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[7]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1766,7 +1847,7 @@ func (x *LocalityLoadBalancerSetting) String() string {
 func (*LocalityLoadBalancerSetting) ProtoMessage() {}
 
 func (x *LocalityLoadBalancerSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[7]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1779,7 +1860,7 @@ func (x *LocalityLoadBalancerSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocalityLoadBalancerSetting.ProtoReflect.Descriptor instead.
 func (*LocalityLoadBalancerSetting) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{7}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *LocalityLoadBalancerSetting) GetDistribute() []*LocalityLoadBalancerSetting_Distribute {
@@ -1832,7 +1913,7 @@ type TrafficPolicy_PortTrafficPolicy struct {
 func (x *TrafficPolicy_PortTrafficPolicy) Reset() {
 	*x = TrafficPolicy_PortTrafficPolicy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[8]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1845,7 +1926,7 @@ func (x *TrafficPolicy_PortTrafficPolicy) String() string {
 func (*TrafficPolicy_PortTrafficPolicy) ProtoMessage() {}
 
 func (x *TrafficPolicy_PortTrafficPolicy) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[8]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1920,7 +2001,7 @@ type TrafficPolicy_TunnelSettings struct {
 func (x *TrafficPolicy_TunnelSettings) Reset() {
 	*x = TrafficPolicy_TunnelSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[9]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1933,7 +2014,7 @@ func (x *TrafficPolicy_TunnelSettings) String() string {
 func (*TrafficPolicy_TunnelSettings) ProtoMessage() {}
 
 func (x *TrafficPolicy_TunnelSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[9]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2020,7 +2101,7 @@ type LoadBalancerSettings_ConsistentHashLB struct {
 func (x *LoadBalancerSettings_ConsistentHashLB) Reset() {
 	*x = LoadBalancerSettings_ConsistentHashLB{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[11]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2033,7 +2114,7 @@ func (x *LoadBalancerSettings_ConsistentHashLB) String() string {
 func (*LoadBalancerSettings_ConsistentHashLB) ProtoMessage() {}
 
 func (x *LoadBalancerSettings_ConsistentHashLB) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[11]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2186,7 +2267,7 @@ type LoadBalancerSettings_ConsistentHashLB_RingHash struct {
 func (x *LoadBalancerSettings_ConsistentHashLB_RingHash) Reset() {
 	*x = LoadBalancerSettings_ConsistentHashLB_RingHash{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[12]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2199,7 +2280,7 @@ func (x *LoadBalancerSettings_ConsistentHashLB_RingHash) String() string {
 func (*LoadBalancerSettings_ConsistentHashLB_RingHash) ProtoMessage() {}
 
 func (x *LoadBalancerSettings_ConsistentHashLB_RingHash) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[12]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2236,7 +2317,7 @@ type LoadBalancerSettings_ConsistentHashLB_MagLev struct {
 func (x *LoadBalancerSettings_ConsistentHashLB_MagLev) Reset() {
 	*x = LoadBalancerSettings_ConsistentHashLB_MagLev{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[13]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2249,7 +2330,7 @@ func (x *LoadBalancerSettings_ConsistentHashLB_MagLev) String() string {
 func (*LoadBalancerSettings_ConsistentHashLB_MagLev) ProtoMessage() {}
 
 func (x *LoadBalancerSettings_ConsistentHashLB_MagLev) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[13]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2292,7 +2373,7 @@ type LoadBalancerSettings_ConsistentHashLB_HTTPCookie struct {
 func (x *LoadBalancerSettings_ConsistentHashLB_HTTPCookie) Reset() {
 	*x = LoadBalancerSettings_ConsistentHashLB_HTTPCookie{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[14]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2305,7 +2386,7 @@ func (x *LoadBalancerSettings_ConsistentHashLB_HTTPCookie) String() string {
 func (*LoadBalancerSettings_ConsistentHashLB_HTTPCookie) ProtoMessage() {}
 
 func (x *LoadBalancerSettings_ConsistentHashLB_HTTPCookie) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[14]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2364,7 +2445,7 @@ type ConnectionPoolSettings_TCPSettings struct {
 func (x *ConnectionPoolSettings_TCPSettings) Reset() {
 	*x = ConnectionPoolSettings_TCPSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[15]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2377,7 +2458,7 @@ func (x *ConnectionPoolSettings_TCPSettings) String() string {
 func (*ConnectionPoolSettings_TCPSettings) ProtoMessage() {}
 
 func (x *ConnectionPoolSettings_TCPSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[15]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2390,7 +2471,7 @@ func (x *ConnectionPoolSettings_TCPSettings) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use ConnectionPoolSettings_TCPSettings.ProtoReflect.Descriptor instead.
 func (*ConnectionPoolSettings_TCPSettings) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{4, 0}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{5, 0}
 }
 
 func (x *ConnectionPoolSettings_TCPSettings) GetMaxConnections() int32 {
@@ -2462,7 +2543,7 @@ type ConnectionPoolSettings_HTTPSettings struct {
 func (x *ConnectionPoolSettings_HTTPSettings) Reset() {
 	*x = ConnectionPoolSettings_HTTPSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[16]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2475,7 +2556,7 @@ func (x *ConnectionPoolSettings_HTTPSettings) String() string {
 func (*ConnectionPoolSettings_HTTPSettings) ProtoMessage() {}
 
 func (x *ConnectionPoolSettings_HTTPSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[16]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2488,7 +2569,7 @@ func (x *ConnectionPoolSettings_HTTPSettings) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use ConnectionPoolSettings_HTTPSettings.ProtoReflect.Descriptor instead.
 func (*ConnectionPoolSettings_HTTPSettings) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{4, 1}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{5, 1}
 }
 
 func (x *ConnectionPoolSettings_HTTPSettings) GetHttp1MaxPendingRequests() int32 {
@@ -2563,7 +2644,7 @@ type ConnectionPoolSettings_TCPSettings_TcpKeepalive struct {
 func (x *ConnectionPoolSettings_TCPSettings_TcpKeepalive) Reset() {
 	*x = ConnectionPoolSettings_TCPSettings_TcpKeepalive{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[17]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2576,7 +2657,7 @@ func (x *ConnectionPoolSettings_TCPSettings_TcpKeepalive) String() string {
 func (*ConnectionPoolSettings_TCPSettings_TcpKeepalive) ProtoMessage() {}
 
 func (x *ConnectionPoolSettings_TCPSettings_TcpKeepalive) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[17]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2589,7 +2670,7 @@ func (x *ConnectionPoolSettings_TCPSettings_TcpKeepalive) ProtoReflect() protore
 
 // Deprecated: Use ConnectionPoolSettings_TCPSettings_TcpKeepalive.ProtoReflect.Descriptor instead.
 func (*ConnectionPoolSettings_TCPSettings_TcpKeepalive) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{4, 0, 0}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{5, 0, 0}
 }
 
 func (x *ConnectionPoolSettings_TCPSettings_TcpKeepalive) GetProbes() uint32 {
@@ -2639,7 +2720,7 @@ type LocalityLoadBalancerSetting_Distribute struct {
 func (x *LocalityLoadBalancerSetting_Distribute) Reset() {
 	*x = LocalityLoadBalancerSetting_Distribute{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[18]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2652,7 +2733,7 @@ func (x *LocalityLoadBalancerSetting_Distribute) String() string {
 func (*LocalityLoadBalancerSetting_Distribute) ProtoMessage() {}
 
 func (x *LocalityLoadBalancerSetting_Distribute) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[18]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2665,7 +2746,7 @@ func (x *LocalityLoadBalancerSetting_Distribute) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use LocalityLoadBalancerSetting_Distribute.ProtoReflect.Descriptor instead.
 func (*LocalityLoadBalancerSetting_Distribute) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{7, 0}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{8, 0}
 }
 
 func (x *LocalityLoadBalancerSetting_Distribute) GetFrom() string {
@@ -2704,7 +2785,7 @@ type LocalityLoadBalancerSetting_Failover struct {
 func (x *LocalityLoadBalancerSetting_Failover) Reset() {
 	*x = LocalityLoadBalancerSetting_Failover{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[19]
+		mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2717,7 +2798,7 @@ func (x *LocalityLoadBalancerSetting_Failover) String() string {
 func (*LocalityLoadBalancerSetting_Failover) ProtoMessage() {}
 
 func (x *LocalityLoadBalancerSetting_Failover) ProtoReflect() protoreflect.Message {
-	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[19]
+	mi := &file_networking_v1beta1_destination_rule_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2730,7 +2811,7 @@ func (x *LocalityLoadBalancerSetting_Failover) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use LocalityLoadBalancerSetting_Failover.ProtoReflect.Descriptor instead.
 func (*LocalityLoadBalancerSetting_Failover) Descriptor() ([]byte, []int) {
-	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{7, 1}
+	return file_networking_v1beta1_destination_rule_proto_rawDescGZIP(), []int{8, 1}
 }
 
 func (x *LocalityLoadBalancerSetting_Failover) GetFrom() string {
@@ -2865,7 +2946,7 @@ var file_networking_v1beta1_destination_rule_proto_rawDesc = []byte{
 	0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61,
 	0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
-	0x3a, 0x02, 0x38, 0x01, 0x22, 0xfd, 0x09, 0x0a, 0x14, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c,
+	0x3a, 0x02, 0x38, 0x01, 0x22, 0xc4, 0x0a, 0x0a, 0x14, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c,
 	0x61, 0x6e, 0x63, 0x65, 0x72, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x51, 0x0a,
 	0x06, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x37, 0x2e,
 	0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67,
@@ -2890,62 +2971,80 @@ var file_networking_v1beta1_destination_rule_proto_rawDesc = []byte{
 	0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x12, 0x77, 0x61,
 	0x72, 0x6d, 0x75, 0x70, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x63, 0x73,
-	0x1a, 0xf2, 0x05, 0x0a, 0x10, 0x43, 0x6f, 0x6e, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x48,
-	0x61, 0x73, 0x68, 0x4c, 0x42, 0x12, 0x2a, 0x0a, 0x10, 0x68, 0x74, 0x74, 0x70, 0x5f, 0x68, 0x65,
-	0x61, 0x64, 0x65, 0x72, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48,
-	0x00, 0x52, 0x0e, 0x68, 0x74, 0x74, 0x70, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x4e, 0x61, 0x6d,
-	0x65, 0x12, 0x6d, 0x0a, 0x0b, 0x68, 0x74, 0x74, 0x70, 0x5f, 0x63, 0x6f, 0x6f, 0x6b, 0x69, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x4a, 0x2e, 0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e,
-	0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x53, 0x65,
-	0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e,
-	0x74, 0x48, 0x61, 0x73, 0x68, 0x4c, 0x42, 0x2e, 0x48, 0x54, 0x54, 0x50, 0x43, 0x6f, 0x6f, 0x6b,
-	0x69, 0x65, 0x48, 0x00, 0x52, 0x0a, 0x68, 0x74, 0x74, 0x70, 0x43, 0x6f, 0x6f, 0x6b, 0x69, 0x65,
-	0x12, 0x24, 0x0a, 0x0d, 0x75, 0x73, 0x65, 0x5f, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x69,
-	0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x48, 0x00, 0x52, 0x0b, 0x75, 0x73, 0x65, 0x53, 0x6f,
-	0x75, 0x72, 0x63, 0x65, 0x49, 0x70, 0x12, 0x3b, 0x0a, 0x19, 0x68, 0x74, 0x74, 0x70, 0x5f, 0x71,
-	0x75, 0x65, 0x72, 0x79, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x5f, 0x6e,
-	0x61, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x16, 0x68, 0x74, 0x74,
-	0x70, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x4e,
-	0x61, 0x6d, 0x65, 0x12, 0x67, 0x0a, 0x09, 0x72, 0x69, 0x6e, 0x67, 0x5f, 0x68, 0x61, 0x73, 0x68,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x48, 0x2e, 0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e,
-	0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x53, 0x65,
-	0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e,
-	0x74, 0x48, 0x61, 0x73, 0x68, 0x4c, 0x42, 0x2e, 0x52, 0x69, 0x6e, 0x67, 0x48, 0x61, 0x73, 0x68,
-	0x48, 0x01, 0x52, 0x08, 0x72, 0x69, 0x6e, 0x67, 0x48, 0x61, 0x73, 0x68, 0x12, 0x60, 0x0a, 0x06,
-	0x6d, 0x61, 0x67, 0x6c, 0x65, 0x76, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x46, 0x2e, 0x69,
-	0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x72, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x2e, 0x43, 0x6f, 0x6e,
-	0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x4c, 0x42, 0x2e, 0x4d, 0x61,
-	0x67, 0x4c, 0x65, 0x76, 0x48, 0x01, 0x52, 0x06, 0x6d, 0x61, 0x67, 0x6c, 0x65, 0x76, 0x12, 0x2e,
-	0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x5f, 0x72, 0x69, 0x6e, 0x67, 0x5f, 0x73,
-	0x69, 0x7a, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x42, 0x02, 0x18, 0x01, 0x52, 0x0f, 0x6d,
-	0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x52, 0x69, 0x6e, 0x67, 0x53, 0x69, 0x7a, 0x65, 0x1a, 0x36,
-	0x0a, 0x08, 0x52, 0x69, 0x6e, 0x67, 0x48, 0x61, 0x73, 0x68, 0x12, 0x2a, 0x0a, 0x11, 0x6d, 0x69,
-	0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x5f, 0x72, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x52, 0x69,
-	0x6e, 0x67, 0x53, 0x69, 0x7a, 0x65, 0x1a, 0x27, 0x0a, 0x06, 0x4d, 0x61, 0x67, 0x4c, 0x65, 0x76,
-	0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x1a,
-	0x66, 0x0a, 0x0a, 0x48, 0x54, 0x54, 0x50, 0x43, 0x6f, 0x6f, 0x6b, 0x69, 0x65, 0x12, 0x17, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x03, 0xe0, 0x41, 0x02,
-	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x74,
-	0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x52, 0x03, 0x74, 0x74, 0x6c, 0x42, 0x0a, 0x0a, 0x08, 0x68, 0x61, 0x73, 0x68, 0x5f,
-	0x6b, 0x65, 0x79, 0x42, 0x10, 0x0a, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x5f, 0x61, 0x6c, 0x67, 0x6f,
-	0x72, 0x69, 0x74, 0x68, 0x6d, 0x22, 0x70, 0x0a, 0x08, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x4c,
-	0x42, 0x12, 0x0f, 0x0a, 0x0b, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44,
-	0x10, 0x00, 0x12, 0x12, 0x0a, 0x0a, 0x4c, 0x45, 0x41, 0x53, 0x54, 0x5f, 0x43, 0x4f, 0x4e, 0x4e,
-	0x10, 0x01, 0x1a, 0x02, 0x08, 0x01, 0x12, 0x0a, 0x0a, 0x06, 0x52, 0x41, 0x4e, 0x44, 0x4f, 0x4d,
-	0x10, 0x02, 0x12, 0x0f, 0x0a, 0x0b, 0x50, 0x41, 0x53, 0x53, 0x54, 0x48, 0x52, 0x4f, 0x55, 0x47,
-	0x48, 0x10, 0x03, 0x12, 0x0f, 0x0a, 0x0b, 0x52, 0x4f, 0x55, 0x4e, 0x44, 0x5f, 0x52, 0x4f, 0x42,
-	0x49, 0x4e, 0x10, 0x04, 0x12, 0x11, 0x0a, 0x0d, 0x4c, 0x45, 0x41, 0x53, 0x54, 0x5f, 0x52, 0x45,
-	0x51, 0x55, 0x45, 0x53, 0x54, 0x10, 0x05, 0x42, 0x0b, 0x0a, 0x09, 0x6c, 0x62, 0x5f, 0x70, 0x6f,
-	0x6c, 0x69, 0x63, 0x79, 0x22, 0x90, 0x09, 0x0a, 0x16, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74,
+	0x12, 0x45, 0x0a, 0x06, 0x77, 0x61, 0x72, 0x6d, 0x75, 0x70, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x2d, 0x2e, 0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x57, 0x61, 0x72, 0x6d,
+	0x75, 0x70, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x06, 0x77, 0x61, 0x72, 0x6d, 0x75, 0x70, 0x1a, 0xf2, 0x05, 0x0a, 0x10, 0x43, 0x6f, 0x6e, 0x73,
+	0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x4c, 0x42, 0x12, 0x2a, 0x0a, 0x10,
+	0x68, 0x74, 0x74, 0x70, 0x5f, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x5f, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x0e, 0x68, 0x74, 0x74, 0x70, 0x48, 0x65,
+	0x61, 0x64, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x6d, 0x0a, 0x0b, 0x68, 0x74, 0x74, 0x70,
+	0x5f, 0x63, 0x6f, 0x6f, 0x6b, 0x69, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x4a, 0x2e,
+	0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c,
+	0x61, 0x6e, 0x63, 0x65, 0x72, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x2e, 0x43, 0x6f,
+	0x6e, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x4c, 0x42, 0x2e, 0x48,
+	0x54, 0x54, 0x50, 0x43, 0x6f, 0x6f, 0x6b, 0x69, 0x65, 0x48, 0x00, 0x52, 0x0a, 0x68, 0x74, 0x74,
+	0x70, 0x43, 0x6f, 0x6f, 0x6b, 0x69, 0x65, 0x12, 0x24, 0x0a, 0x0d, 0x75, 0x73, 0x65, 0x5f, 0x73,
+	0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x69, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x48, 0x00,
+	0x52, 0x0b, 0x75, 0x73, 0x65, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x49, 0x70, 0x12, 0x3b, 0x0a,
+	0x19, 0x68, 0x74, 0x74, 0x70, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x70, 0x61, 0x72, 0x61,
+	0x6d, 0x65, 0x74, 0x65, 0x72, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
+	0x48, 0x00, 0x52, 0x16, 0x68, 0x74, 0x74, 0x70, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x67, 0x0a, 0x09, 0x72, 0x69,
+	0x6e, 0x67, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x48, 0x2e,
+	0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c,
+	0x61, 0x6e, 0x63, 0x65, 0x72, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x2e, 0x43, 0x6f,
+	0x6e, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x4c, 0x42, 0x2e, 0x52,
+	0x69, 0x6e, 0x67, 0x48, 0x61, 0x73, 0x68, 0x48, 0x01, 0x52, 0x08, 0x72, 0x69, 0x6e, 0x67, 0x48,
+	0x61, 0x73, 0x68, 0x12, 0x60, 0x0a, 0x06, 0x6d, 0x61, 0x67, 0x6c, 0x65, 0x76, 0x18, 0x07, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x46, 0x2e, 0x69, 0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77,
+	0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c,
+	0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x53, 0x65, 0x74, 0x74, 0x69,
+	0x6e, 0x67, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x48, 0x61,
+	0x73, 0x68, 0x4c, 0x42, 0x2e, 0x4d, 0x61, 0x67, 0x4c, 0x65, 0x76, 0x48, 0x01, 0x52, 0x06, 0x6d,
+	0x61, 0x67, 0x6c, 0x65, 0x76, 0x12, 0x2e, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d,
+	0x5f, 0x72, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04,
+	0x42, 0x02, 0x18, 0x01, 0x52, 0x0f, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x52, 0x69, 0x6e,
+	0x67, 0x53, 0x69, 0x7a, 0x65, 0x1a, 0x36, 0x0a, 0x08, 0x52, 0x69, 0x6e, 0x67, 0x48, 0x61, 0x73,
+	0x68, 0x12, 0x2a, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x5f, 0x72, 0x69, 0x6e,
+	0x67, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x6d, 0x69,
+	0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x52, 0x69, 0x6e, 0x67, 0x53, 0x69, 0x7a, 0x65, 0x1a, 0x27, 0x0a,
+	0x06, 0x4d, 0x61, 0x67, 0x4c, 0x65, 0x76, 0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x62, 0x6c, 0x65,
+	0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x62,
+	0x6c, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x1a, 0x66, 0x0a, 0x0a, 0x48, 0x54, 0x54, 0x50, 0x43, 0x6f,
+	0x6f, 0x6b, 0x69, 0x65, 0x12, 0x17, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x03, 0xe0, 0x41, 0x02, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a,
+	0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74,
+	0x68, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x74, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x03, 0x74, 0x74, 0x6c, 0x42, 0x0a,
+	0x0a, 0x08, 0x68, 0x61, 0x73, 0x68, 0x5f, 0x6b, 0x65, 0x79, 0x42, 0x10, 0x0a, 0x0e, 0x68, 0x61,
+	0x73, 0x68, 0x5f, 0x61, 0x6c, 0x67, 0x6f, 0x72, 0x69, 0x74, 0x68, 0x6d, 0x22, 0x70, 0x0a, 0x08,
+	0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x4c, 0x42, 0x12, 0x0f, 0x0a, 0x0b, 0x55, 0x4e, 0x53, 0x50,
+	0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x12, 0x0a, 0x0a, 0x4c, 0x45, 0x41,
+	0x53, 0x54, 0x5f, 0x43, 0x4f, 0x4e, 0x4e, 0x10, 0x01, 0x1a, 0x02, 0x08, 0x01, 0x12, 0x0a, 0x0a,
+	0x06, 0x52, 0x41, 0x4e, 0x44, 0x4f, 0x4d, 0x10, 0x02, 0x12, 0x0f, 0x0a, 0x0b, 0x50, 0x41, 0x53,
+	0x53, 0x54, 0x48, 0x52, 0x4f, 0x55, 0x47, 0x48, 0x10, 0x03, 0x12, 0x0f, 0x0a, 0x0b, 0x52, 0x4f,
+	0x55, 0x4e, 0x44, 0x5f, 0x52, 0x4f, 0x42, 0x49, 0x4e, 0x10, 0x04, 0x12, 0x11, 0x0a, 0x0d, 0x4c,
+	0x45, 0x41, 0x53, 0x54, 0x5f, 0x52, 0x45, 0x51, 0x55, 0x45, 0x53, 0x54, 0x10, 0x05, 0x42, 0x0b,
+	0x0a, 0x09, 0x6c, 0x62, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22, 0xd6, 0x01, 0x0a, 0x13,
+	0x57, 0x61, 0x72, 0x6d, 0x75, 0x70, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x12, 0x3a, 0x0a, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x42, 0x03, 0xe0, 0x41, 0x02, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12,
+	0x45, 0x0a, 0x0f, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x5f, 0x70, 0x65, 0x72, 0x63, 0x65,
+	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x6f, 0x75, 0x62, 0x6c,
+	0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x0e, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x50,
+	0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x12, 0x3c, 0x0a, 0x0a, 0x61, 0x67, 0x67, 0x72, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x6f, 0x75,
+	0x62, 0x6c, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x0a, 0x61, 0x67, 0x67, 0x72, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x22, 0x90, 0x09, 0x0a, 0x16, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74,
 	0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x12,
 	0x4e, 0x0a, 0x03, 0x74, 0x63, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x3c, 0x2e, 0x69,
 	0x73, 0x74, 0x69, 0x6f, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
@@ -3141,7 +3240,7 @@ func file_networking_v1beta1_destination_rule_proto_rawDescGZIP() []byte {
 }
 
 var file_networking_v1beta1_destination_rule_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_networking_v1beta1_destination_rule_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_networking_v1beta1_destination_rule_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_networking_v1beta1_destination_rule_proto_goTypes = []interface{}{
 	(LoadBalancerSettings_SimpleLB)(0),                       // 0: istio.networking.v1beta1.LoadBalancerSettings.SimpleLB
 	(ConnectionPoolSettings_HTTPSettings_H2UpgradePolicy)(0), // 1: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy
@@ -3150,79 +3249,85 @@ var file_networking_v1beta1_destination_rule_proto_goTypes = []interface{}{
 	(*TrafficPolicy)(nil),                                    // 4: istio.networking.v1beta1.TrafficPolicy
 	(*Subset)(nil),                                           // 5: istio.networking.v1beta1.Subset
 	(*LoadBalancerSettings)(nil),                             // 6: istio.networking.v1beta1.LoadBalancerSettings
-	(*ConnectionPoolSettings)(nil),                           // 7: istio.networking.v1beta1.ConnectionPoolSettings
-	(*OutlierDetection)(nil),                                 // 8: istio.networking.v1beta1.OutlierDetection
-	(*ClientTLSSettings)(nil),                                // 9: istio.networking.v1beta1.ClientTLSSettings
-	(*LocalityLoadBalancerSetting)(nil),                      // 10: istio.networking.v1beta1.LocalityLoadBalancerSetting
-	(*TrafficPolicy_PortTrafficPolicy)(nil),                  // 11: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy
-	(*TrafficPolicy_TunnelSettings)(nil),                     // 12: istio.networking.v1beta1.TrafficPolicy.TunnelSettings
-	nil,                                                      // 13: istio.networking.v1beta1.Subset.LabelsEntry
-	(*LoadBalancerSettings_ConsistentHashLB)(nil),            // 14: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB
-	(*LoadBalancerSettings_ConsistentHashLB_RingHash)(nil),   // 15: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.RingHash
-	(*LoadBalancerSettings_ConsistentHashLB_MagLev)(nil),     // 16: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.MagLev
-	(*LoadBalancerSettings_ConsistentHashLB_HTTPCookie)(nil), // 17: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.HTTPCookie
-	(*ConnectionPoolSettings_TCPSettings)(nil),               // 18: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings
-	(*ConnectionPoolSettings_HTTPSettings)(nil),              // 19: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings
-	(*ConnectionPoolSettings_TCPSettings_TcpKeepalive)(nil),  // 20: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive
-	(*LocalityLoadBalancerSetting_Distribute)(nil),           // 21: istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute
-	(*LocalityLoadBalancerSetting_Failover)(nil),             // 22: istio.networking.v1beta1.LocalityLoadBalancerSetting.Failover
-	nil,                              // 23: istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute.ToEntry
-	(*v1beta1.WorkloadSelector)(nil), // 24: istio.type.v1beta1.WorkloadSelector
-	(*duration.Duration)(nil),        // 25: google.protobuf.Duration
-	(*wrappers.UInt32Value)(nil),     // 26: google.protobuf.UInt32Value
-	(*wrappers.BoolValue)(nil),       // 27: google.protobuf.BoolValue
-	(*PortSelector)(nil),             // 28: istio.networking.v1beta1.PortSelector
+	(*WarmupConfiguration)(nil),                              // 7: istio.networking.v1beta1.WarmupConfiguration
+	(*ConnectionPoolSettings)(nil),                           // 8: istio.networking.v1beta1.ConnectionPoolSettings
+	(*OutlierDetection)(nil),                                 // 9: istio.networking.v1beta1.OutlierDetection
+	(*ClientTLSSettings)(nil),                                // 10: istio.networking.v1beta1.ClientTLSSettings
+	(*LocalityLoadBalancerSetting)(nil),                      // 11: istio.networking.v1beta1.LocalityLoadBalancerSetting
+	(*TrafficPolicy_PortTrafficPolicy)(nil),                  // 12: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy
+	(*TrafficPolicy_TunnelSettings)(nil),                     // 13: istio.networking.v1beta1.TrafficPolicy.TunnelSettings
+	nil,                                                      // 14: istio.networking.v1beta1.Subset.LabelsEntry
+	(*LoadBalancerSettings_ConsistentHashLB)(nil),            // 15: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB
+	(*LoadBalancerSettings_ConsistentHashLB_RingHash)(nil),   // 16: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.RingHash
+	(*LoadBalancerSettings_ConsistentHashLB_MagLev)(nil),     // 17: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.MagLev
+	(*LoadBalancerSettings_ConsistentHashLB_HTTPCookie)(nil), // 18: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.HTTPCookie
+	(*ConnectionPoolSettings_TCPSettings)(nil),               // 19: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings
+	(*ConnectionPoolSettings_HTTPSettings)(nil),              // 20: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings
+	(*ConnectionPoolSettings_TCPSettings_TcpKeepalive)(nil),  // 21: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive
+	(*LocalityLoadBalancerSetting_Distribute)(nil),           // 22: istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute
+	(*LocalityLoadBalancerSetting_Failover)(nil),             // 23: istio.networking.v1beta1.LocalityLoadBalancerSetting.Failover
+	nil,                              // 24: istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute.ToEntry
+	(*v1beta1.WorkloadSelector)(nil), // 25: istio.type.v1beta1.WorkloadSelector
+	(*duration.Duration)(nil),        // 26: google.protobuf.Duration
+	(*wrappers.DoubleValue)(nil),     // 27: google.protobuf.DoubleValue
+	(*wrappers.UInt32Value)(nil),     // 28: google.protobuf.UInt32Value
+	(*wrappers.BoolValue)(nil),       // 29: google.protobuf.BoolValue
+	(*PortSelector)(nil),             // 30: istio.networking.v1beta1.PortSelector
 }
 var file_networking_v1beta1_destination_rule_proto_depIdxs = []int32{
 	4,  // 0: istio.networking.v1beta1.DestinationRule.traffic_policy:type_name -> istio.networking.v1beta1.TrafficPolicy
 	5,  // 1: istio.networking.v1beta1.DestinationRule.subsets:type_name -> istio.networking.v1beta1.Subset
-	24, // 2: istio.networking.v1beta1.DestinationRule.workload_selector:type_name -> istio.type.v1beta1.WorkloadSelector
+	25, // 2: istio.networking.v1beta1.DestinationRule.workload_selector:type_name -> istio.type.v1beta1.WorkloadSelector
 	6,  // 3: istio.networking.v1beta1.TrafficPolicy.load_balancer:type_name -> istio.networking.v1beta1.LoadBalancerSettings
-	7,  // 4: istio.networking.v1beta1.TrafficPolicy.connection_pool:type_name -> istio.networking.v1beta1.ConnectionPoolSettings
-	8,  // 5: istio.networking.v1beta1.TrafficPolicy.outlier_detection:type_name -> istio.networking.v1beta1.OutlierDetection
-	9,  // 6: istio.networking.v1beta1.TrafficPolicy.tls:type_name -> istio.networking.v1beta1.ClientTLSSettings
-	11, // 7: istio.networking.v1beta1.TrafficPolicy.port_level_settings:type_name -> istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy
-	12, // 8: istio.networking.v1beta1.TrafficPolicy.tunnel:type_name -> istio.networking.v1beta1.TrafficPolicy.TunnelSettings
-	13, // 9: istio.networking.v1beta1.Subset.labels:type_name -> istio.networking.v1beta1.Subset.LabelsEntry
+	8,  // 4: istio.networking.v1beta1.TrafficPolicy.connection_pool:type_name -> istio.networking.v1beta1.ConnectionPoolSettings
+	9,  // 5: istio.networking.v1beta1.TrafficPolicy.outlier_detection:type_name -> istio.networking.v1beta1.OutlierDetection
+	10, // 6: istio.networking.v1beta1.TrafficPolicy.tls:type_name -> istio.networking.v1beta1.ClientTLSSettings
+	12, // 7: istio.networking.v1beta1.TrafficPolicy.port_level_settings:type_name -> istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy
+	13, // 8: istio.networking.v1beta1.TrafficPolicy.tunnel:type_name -> istio.networking.v1beta1.TrafficPolicy.TunnelSettings
+	14, // 9: istio.networking.v1beta1.Subset.labels:type_name -> istio.networking.v1beta1.Subset.LabelsEntry
 	4,  // 10: istio.networking.v1beta1.Subset.traffic_policy:type_name -> istio.networking.v1beta1.TrafficPolicy
 	0,  // 11: istio.networking.v1beta1.LoadBalancerSettings.simple:type_name -> istio.networking.v1beta1.LoadBalancerSettings.SimpleLB
-	14, // 12: istio.networking.v1beta1.LoadBalancerSettings.consistent_hash:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB
-	10, // 13: istio.networking.v1beta1.LoadBalancerSettings.locality_lb_setting:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting
-	25, // 14: istio.networking.v1beta1.LoadBalancerSettings.warmup_duration_secs:type_name -> google.protobuf.Duration
-	18, // 15: istio.networking.v1beta1.ConnectionPoolSettings.tcp:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings
-	19, // 16: istio.networking.v1beta1.ConnectionPoolSettings.http:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings
-	26, // 17: istio.networking.v1beta1.OutlierDetection.consecutive_local_origin_failures:type_name -> google.protobuf.UInt32Value
-	26, // 18: istio.networking.v1beta1.OutlierDetection.consecutive_gateway_errors:type_name -> google.protobuf.UInt32Value
-	26, // 19: istio.networking.v1beta1.OutlierDetection.consecutive_5xx_errors:type_name -> google.protobuf.UInt32Value
-	25, // 20: istio.networking.v1beta1.OutlierDetection.interval:type_name -> google.protobuf.Duration
-	25, // 21: istio.networking.v1beta1.OutlierDetection.base_ejection_time:type_name -> google.protobuf.Duration
-	2,  // 22: istio.networking.v1beta1.ClientTLSSettings.mode:type_name -> istio.networking.v1beta1.ClientTLSSettings.TLSmode
-	27, // 23: istio.networking.v1beta1.ClientTLSSettings.insecure_skip_verify:type_name -> google.protobuf.BoolValue
-	21, // 24: istio.networking.v1beta1.LocalityLoadBalancerSetting.distribute:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute
-	22, // 25: istio.networking.v1beta1.LocalityLoadBalancerSetting.failover:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting.Failover
-	27, // 26: istio.networking.v1beta1.LocalityLoadBalancerSetting.enabled:type_name -> google.protobuf.BoolValue
-	28, // 27: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.port:type_name -> istio.networking.v1beta1.PortSelector
-	6,  // 28: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.load_balancer:type_name -> istio.networking.v1beta1.LoadBalancerSettings
-	7,  // 29: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.connection_pool:type_name -> istio.networking.v1beta1.ConnectionPoolSettings
-	8,  // 30: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.outlier_detection:type_name -> istio.networking.v1beta1.OutlierDetection
-	9,  // 31: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.tls:type_name -> istio.networking.v1beta1.ClientTLSSettings
-	17, // 32: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.http_cookie:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.HTTPCookie
-	15, // 33: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.ring_hash:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.RingHash
-	16, // 34: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.maglev:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.MagLev
-	25, // 35: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.HTTPCookie.ttl:type_name -> google.protobuf.Duration
-	25, // 36: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.connect_timeout:type_name -> google.protobuf.Duration
-	20, // 37: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.tcp_keepalive:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive
-	25, // 38: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.max_connection_duration:type_name -> google.protobuf.Duration
-	25, // 39: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.idle_timeout:type_name -> google.protobuf.Duration
-	1,  // 40: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.h2_upgrade_policy:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy
-	25, // 41: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive.time:type_name -> google.protobuf.Duration
-	25, // 42: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive.interval:type_name -> google.protobuf.Duration
-	23, // 43: istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute.to:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute.ToEntry
-	44, // [44:44] is the sub-list for method output_type
-	44, // [44:44] is the sub-list for method input_type
-	44, // [44:44] is the sub-list for extension type_name
-	44, // [44:44] is the sub-list for extension extendee
-	0,  // [0:44] is the sub-list for field type_name
+	15, // 12: istio.networking.v1beta1.LoadBalancerSettings.consistent_hash:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB
+	11, // 13: istio.networking.v1beta1.LoadBalancerSettings.locality_lb_setting:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting
+	26, // 14: istio.networking.v1beta1.LoadBalancerSettings.warmup_duration_secs:type_name -> google.protobuf.Duration
+	7,  // 15: istio.networking.v1beta1.LoadBalancerSettings.warmup:type_name -> istio.networking.v1beta1.WarmupConfiguration
+	26, // 16: istio.networking.v1beta1.WarmupConfiguration.duration:type_name -> google.protobuf.Duration
+	27, // 17: istio.networking.v1beta1.WarmupConfiguration.minimum_percent:type_name -> google.protobuf.DoubleValue
+	27, // 18: istio.networking.v1beta1.WarmupConfiguration.aggression:type_name -> google.protobuf.DoubleValue
+	19, // 19: istio.networking.v1beta1.ConnectionPoolSettings.tcp:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings
+	20, // 20: istio.networking.v1beta1.ConnectionPoolSettings.http:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings
+	28, // 21: istio.networking.v1beta1.OutlierDetection.consecutive_local_origin_failures:type_name -> google.protobuf.UInt32Value
+	28, // 22: istio.networking.v1beta1.OutlierDetection.consecutive_gateway_errors:type_name -> google.protobuf.UInt32Value
+	28, // 23: istio.networking.v1beta1.OutlierDetection.consecutive_5xx_errors:type_name -> google.protobuf.UInt32Value
+	26, // 24: istio.networking.v1beta1.OutlierDetection.interval:type_name -> google.protobuf.Duration
+	26, // 25: istio.networking.v1beta1.OutlierDetection.base_ejection_time:type_name -> google.protobuf.Duration
+	2,  // 26: istio.networking.v1beta1.ClientTLSSettings.mode:type_name -> istio.networking.v1beta1.ClientTLSSettings.TLSmode
+	29, // 27: istio.networking.v1beta1.ClientTLSSettings.insecure_skip_verify:type_name -> google.protobuf.BoolValue
+	22, // 28: istio.networking.v1beta1.LocalityLoadBalancerSetting.distribute:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute
+	23, // 29: istio.networking.v1beta1.LocalityLoadBalancerSetting.failover:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting.Failover
+	29, // 30: istio.networking.v1beta1.LocalityLoadBalancerSetting.enabled:type_name -> google.protobuf.BoolValue
+	30, // 31: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.port:type_name -> istio.networking.v1beta1.PortSelector
+	6,  // 32: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.load_balancer:type_name -> istio.networking.v1beta1.LoadBalancerSettings
+	8,  // 33: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.connection_pool:type_name -> istio.networking.v1beta1.ConnectionPoolSettings
+	9,  // 34: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.outlier_detection:type_name -> istio.networking.v1beta1.OutlierDetection
+	10, // 35: istio.networking.v1beta1.TrafficPolicy.PortTrafficPolicy.tls:type_name -> istio.networking.v1beta1.ClientTLSSettings
+	18, // 36: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.http_cookie:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.HTTPCookie
+	16, // 37: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.ring_hash:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.RingHash
+	17, // 38: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.maglev:type_name -> istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.MagLev
+	26, // 39: istio.networking.v1beta1.LoadBalancerSettings.ConsistentHashLB.HTTPCookie.ttl:type_name -> google.protobuf.Duration
+	26, // 40: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.connect_timeout:type_name -> google.protobuf.Duration
+	21, // 41: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.tcp_keepalive:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive
+	26, // 42: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.max_connection_duration:type_name -> google.protobuf.Duration
+	26, // 43: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.idle_timeout:type_name -> google.protobuf.Duration
+	1,  // 44: istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.h2_upgrade_policy:type_name -> istio.networking.v1beta1.ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy
+	26, // 45: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive.time:type_name -> google.protobuf.Duration
+	26, // 46: istio.networking.v1beta1.ConnectionPoolSettings.TCPSettings.TcpKeepalive.interval:type_name -> google.protobuf.Duration
+	24, // 47: istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute.to:type_name -> istio.networking.v1beta1.LocalityLoadBalancerSetting.Distribute.ToEntry
+	48, // [48:48] is the sub-list for method output_type
+	48, // [48:48] is the sub-list for method input_type
+	48, // [48:48] is the sub-list for extension type_name
+	48, // [48:48] is the sub-list for extension extendee
+	0,  // [0:48] is the sub-list for field type_name
 }
 
 func init() { file_networking_v1beta1_destination_rule_proto_init() }
@@ -3281,7 +3386,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			}
 		}
 		file_networking_v1beta1_destination_rule_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConnectionPoolSettings); i {
+			switch v := v.(*WarmupConfiguration); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3293,7 +3398,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			}
 		}
 		file_networking_v1beta1_destination_rule_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutlierDetection); i {
+			switch v := v.(*ConnectionPoolSettings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3305,7 +3410,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			}
 		}
 		file_networking_v1beta1_destination_rule_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientTLSSettings); i {
+			switch v := v.(*OutlierDetection); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3317,7 +3422,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			}
 		}
 		file_networking_v1beta1_destination_rule_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LocalityLoadBalancerSetting); i {
+			switch v := v.(*ClientTLSSettings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3329,7 +3434,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			}
 		}
 		file_networking_v1beta1_destination_rule_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TrafficPolicy_PortTrafficPolicy); i {
+			switch v := v.(*LocalityLoadBalancerSetting); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3341,6 +3446,18 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			}
 		}
 		file_networking_v1beta1_destination_rule_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TrafficPolicy_PortTrafficPolicy); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_networking_v1beta1_destination_rule_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*TrafficPolicy_TunnelSettings); i {
 			case 0:
 				return &v.state
@@ -3352,7 +3469,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LoadBalancerSettings_ConsistentHashLB); i {
 			case 0:
 				return &v.state
@@ -3364,7 +3481,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LoadBalancerSettings_ConsistentHashLB_RingHash); i {
 			case 0:
 				return &v.state
@@ -3376,7 +3493,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LoadBalancerSettings_ConsistentHashLB_MagLev); i {
 			case 0:
 				return &v.state
@@ -3388,7 +3505,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LoadBalancerSettings_ConsistentHashLB_HTTPCookie); i {
 			case 0:
 				return &v.state
@@ -3400,7 +3517,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ConnectionPoolSettings_TCPSettings); i {
 			case 0:
 				return &v.state
@@ -3412,7 +3529,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ConnectionPoolSettings_HTTPSettings); i {
 			case 0:
 				return &v.state
@@ -3424,7 +3541,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ConnectionPoolSettings_TCPSettings_TcpKeepalive); i {
 			case 0:
 				return &v.state
@@ -3436,7 +3553,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LocalityLoadBalancerSetting_Distribute); i {
 			case 0:
 				return &v.state
@@ -3448,7 +3565,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 				return nil
 			}
 		}
-		file_networking_v1beta1_destination_rule_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+		file_networking_v1beta1_destination_rule_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LocalityLoadBalancerSetting_Failover); i {
 			case 0:
 				return &v.state
@@ -3465,7 +3582,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 		(*LoadBalancerSettings_Simple)(nil),
 		(*LoadBalancerSettings_ConsistentHash)(nil),
 	}
-	file_networking_v1beta1_destination_rule_proto_msgTypes[11].OneofWrappers = []interface{}{
+	file_networking_v1beta1_destination_rule_proto_msgTypes[12].OneofWrappers = []interface{}{
 		(*LoadBalancerSettings_ConsistentHashLB_HttpHeaderName)(nil),
 		(*LoadBalancerSettings_ConsistentHashLB_HttpCookie)(nil),
 		(*LoadBalancerSettings_ConsistentHashLB_UseSourceIp)(nil),
@@ -3479,7 +3596,7 @@ func file_networking_v1beta1_destination_rule_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_networking_v1beta1_destination_rule_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   21,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
